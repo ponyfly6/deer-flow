@@ -254,15 +254,18 @@ export function useThreadStream({
         if (message.files && message.files.length > 0) {
           setIsUploading(true);
           try {
-            // Convert FileUIPart to File objects by fetching blob URLs
+            // Convert FileUIPart to File objects - prefer direct File object over blob URL fetch
             const filePromises = message.files.map(async (fileUIPart) => {
+              // Use the File object directly if available (avoids blob URL fetch issues)
+              if (fileUIPart.file) {
+                return fileUIPart.file;
+              }
+              // Fallback: fetch from blob URL if File object not available
               if (fileUIPart.url && fileUIPart.filename) {
                 try {
-                  // Fetch the blob URL to get the file data
                   const response = await fetch(fileUIPart.url);
                   const blob = await response.blob();
 
-                  // Create a File object from the blob
                   return new File([blob], fileUIPart.filename, {
                     type: fileUIPart.mediaType || blob.type,
                   });
